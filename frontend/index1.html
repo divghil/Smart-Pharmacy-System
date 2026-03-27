@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Pharmacy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Smart Pharmacy</h1>
+
+    <!-- Filter -->
+    <select id="ageFilter">
+        <option value="">All</option>
+        <option value="0-12">0-12</option>
+        <option value="13-25">13-25</option>
+        <option value="26-45">26-45</option>
+        <option value="45+">45+</option>
+    </select>
+
+    <button onclick="loadMedicines()">Load Medicines</button>
+
+    <!-- Medicines List -->
+    <div id="medicineList"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

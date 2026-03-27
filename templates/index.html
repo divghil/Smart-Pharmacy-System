@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RxSmart — Smart Pharmacy System</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal-50: #E1F5EE; --teal-100: #9FE1CB; --teal-400: #1D9E75;
+      --teal-600: #0F6E56; --teal-800: #085041;
+      --blue-50: #E6F1FB; --blue-400: #378ADD; --blue-600: #185FA5;
+      --amber-50: #FAEEDA; --amber-400: #BA7517; --amber-600: #854F0B;
+      --coral-50: #FAECE7; --coral-400: #D85A30; --coral-600: #993C1D;
+      --gray-50: #F1EFE8; --gray-100: #D3D1C7; --gray-400: #888780; --gray-600: #5F5E5A;
+      --red-50: #FCEBEB; --red-400: #E24B4A; --red-600: #A32D2D;
+      --green-50: #EAF3DE; --green-400: #639922; --green-600: #3B6D11;
+
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f8f6;
+      --bg-tertiary: #f2f1ed;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6b68;
+      --text-tertiary: #a0a09a;
+      --border-light: rgba(0,0,0,0.10);
+      --border-medium: rgba(0,0,0,0.18);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    body { font-family: var(--font); background: var(--bg-tertiary); color: var(--text-primary); }
+
+    /* ── Layout ── */
+    .app { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px; min-width: 220px;
+      background: var(--bg-primary);
+      border-right: 0.5px solid var(--border-light);
+      display: flex; flex-direction: column;
+    }
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      border-bottom: 0.5px solid var(--border-light);
+    }
+    .logo-mark { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--teal-400);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 18px; height: 18px; }
+    .logo-text { font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.2; }
+    .logo-sub  { font-size: 11px; color: var(--text-secondary); }
+
+    .nav { padding: 12px 0; flex: 1; }
+    .nav-section {
+      padding: 0 16px 4px; font-size: 10px; font-weight: 600;
+      color: var(--text-tertiary); letter-spacing: 0.08em; margin-top: 12px;
+      text-transform: uppercase;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 16px; cursor: pointer;
+      font-size: 13px; color: var(--text-secondary);
+      border-radius: 6px; margin: 1px 8px;
+      transition: background 0.12s;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    .nav-item.active { background: var(--teal-50); color: var(--teal-600); font-weight: 600; }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 0.5px solid var(--border-light);
+    }
+    .user-chip {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px; border-radius: 8px;
+      background: var(--bg-secondary);
+    }
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--teal-400);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;
+    }
+    .user-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .user-role { font-size: 11px; color: var(--text-tertiary); }
+
+    /* ── Main ── */
+    .main {
+      flex: 1; display: flex; flex-direction: column;
+      overflow: hidden; background: var(--bg-tertiary);
+    }
+
+    .topbar {
+      background: var(--bg-primary);
+      border-bottom: 0.5px solid var(--border-light);
+      padding: 0 24px; height: 56px; min-height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .page-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+    .search-bar {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-secondary);
+      border: 0.5px solid var(--border-light);
+      border-radius: 8px; padding: 6px 12px;
+      font-size: 13px; color: var(--text-secondary);
+      cursor: text; width: 220px;
+    }
+    .search-bar svg { width: 14px; height: 14px; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      border: 0.5px solid var(--border-medium);
+      background: var(--bg-primary); color: var(--text-primary);
+      font-family: var(--font);
+      transition: background 0.1s;
+    }
+    .btn:hover { background: var(--bg-secondary); }
+    .btn.primary {
+      background: var(--teal-400); color: #fff;
+      border-color: var(--teal-400);
+    }
+    .btn.primary:hover { background: var(--teal-600); }
+    .btn svg { width: 14px; height: 14px; }
+
+    /* ── Content ── */
+    .content { flex: 1; overflow-y: auto; padding: 24px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Page header ── */
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; margin-bottom: 20px;
+    }
+    .page-heading { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+    .page-sub { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+
+    /* ── Metric cards ── */
+    .metrics-grid {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px; margin-bottom: 24px;
+    }
+    .metric-card {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-lg); padding: 16px 20px;
+    }
+    .metric-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
+    }
+    .metric-icon svg { width: 18px; height: 18px; }
+    .metric-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+    .metric-value { font-size: 26px; font-weight: 600; color: var(--text-primary); line-height: 1; }
+    .metric-change { font-size: 11px; margin-top: 6px; }
+    .metric-change.up   { color: var(--green-600); }
+    .metric-change.down { color: var(--red-600); }
+
+    /* ── Grid layouts ── */
+    .grid-main { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-lg); overflow: hidden;
+    }
+    .card-header {
+      padding: 14px 20px 12px;
+      border-bottom: 0.5px solid var(--border-light);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      font-size: 11px; font-weight: 600; color: var(--text-secondary);
+      padding: 10px 20px; text-align: left;
+      border-bottom: 0.5px solid var(--border-light);
+      background: var(--bg-secondary); text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    td {
+      padding: 12px 20px;
+      border-bottom: 0.5px solid var(--border-light);
+      color: var(--text-primary); vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--bg-secondary); }
+
+    /* ── Pills / badges ── */
+    .pill {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .pill-green  { background: var(--green-50);  color: var(--green-600); }
+    .pill-amber  { background: var(--amber-50);  color: var(--amber-600); }
+    .pill-red    { background: var(--red-50);    color: var(--red-600); }
+    .pill-blue   { background: var(--blue-50);   color: var(--blue-600); }
+    .pill-teal   { background: var(--teal-50);   color: var(--teal-600); }
+    .pill-coral  { background: var(--coral-50);  color: var(--coral-600); }
+
+    /* ── Stock bar ── */
+    .stock-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .stock-bar-bg   { flex: 1; height: 5px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden; }
+    .stock-bar-fill { height: 100%; border-radius: 3px; }
+
+    /* ── Bar chart ── */
+    .chart-area { padding: 20px; }
+    .bar-chart   { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
+    .bar-col     { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar         { width: 100%; border-radius: 4px 4px 0 0; }
+
+    /* ── Activity feed ── */
+    .activity-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 20px; border-bottom: 0.5px solid var(--border-light);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .activity-text { font-size: 13px; color: var(--text-primary); line-height: 1.5; }
+    .activity-time { font-size: 11px; color: var(--text-tertiary); }
+
+    /* ── Medicine card grid ── */
+    .search-input-full {
+      width: 100%; padding: 10px 14px; font-size: 13px;
+      border: 0.5px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary); color: var(--text-primary);
+      margin-bottom: 14px; font-family: var(--font);
+    }
+    .search-input-full:focus { outline: none; border-color: var(--teal-400); background: var(--bg-primary); }
+
+    .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-pill {
+      padding: 5px 14px; border-radius: 20px; font-size: 12px; cursor: pointer;
+      border: 0.5px solid var(--border-medium);
+      color: var(--text-secondary); background: var(--bg-primary);
+      transition: all 0.1s; user-select: none;
+    }
+    .filter-pill.active {
+      background: var(--teal-50); border-color: var(--teal-400);
+      color: var(--teal-600); font-weight: 600;
+    }
+
+    .med-card-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+    }
+    .med-card {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-lg); padding: 16px; cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .med-card:hover { border-color: var(--teal-400); box-shadow: 0 2px 8px rgba(29,158,117,0.10); }
+    .med-card-name { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+    .med-card-cat  { font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; }
+    .med-card-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; }
+    .med-card-price { font-size: 18px; font-weight: 600; color: var(--teal-600); }
+    .med-card-stock { font-size: 11px; color: var(--text-secondary); }
+    .add-btn {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: var(--teal-50); border: none; cursor: pointer;
+      color: var(--teal-600); font-size: 20px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .add-btn:hover { background: var(--teal-100); }
+
+    /* ── Orders tabs ── */
+    .tab-row {
+      display: flex; gap: 4px; background: var(--bg-secondary);
+      padding: 4px; border-radius: 8px; margin-bottom: 20px; width: fit-content;
+    }
+    .tab {
+      padding: 6px 16px; border-radius: 6px;
+      font-size: 13px; cursor: pointer; color: var(--text-secondary);
+      user-select: none;
+    }
+    .tab.active { background: var(--bg-primary); color: var(--text-primary); font-weight: 600; }
+
+    /* ── New order / cart ── */
+    .order-cart { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+    .cart-list  { display: flex; flex-direction: column; gap: 8px; }
+    .cart-item {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-md); padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .cart-item-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .cart-item-meta { font-size: 11px; color: var(--text-secondary); }
+    .qty-ctrl { display: flex; align-items: center; gap: 8px; }
+    .qty-btn {
+      width: 26px; height: 26px; border-radius: 6px;
+      border: 0.5px solid var(--border-medium);
+      background: var(--bg-secondary); cursor: pointer;
+      font-size: 16px; font-weight: 600; color: var(--text-primary);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .qty-num { font-size: 13px; font-weight: 600; min-width: 20px; text-align: center; }
+
+    .order-summary {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-lg); padding: 20px;
+      height: fit-content; position: sticky; top: 0;
+    }
+    .summary-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+    .summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; }
+    .summary-row.total {
+      font-weight: 600; font-size: 15px;
+      border-top: 0.5px solid var(--border-light);
+      margin-top: 8px; padding-top: 12px;
+    }
+    .summary-label { color: var(--text-secondary); }
+
+    /* ── Form ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 20px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .field input, .field select, .field textarea {
+      padding: 9px 12px; font-size: 13px;
+      border: 0.5px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      background: var(--bg-primary); color: var(--text-primary);
+      font-family: var(--font);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: none; border-color: var(--teal-400);
+    }
+    .field-full { grid-column: 1 / -1; }
+    .form-footer {
+      padding: 14px 20px;
+      border-top: 0.5px solid var(--border-light);
+      display: flex; justify-content: flex-end; gap: 8px;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 20px; right: 20px;
+      background: var(--teal-800); color: #E1F5EE;
+      padding: 10px 20px; border-radius: 8px;
+      font-size: 13px; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s; z-index: 9999;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ── Loading spinner ── */
+    .loading {
+      display: flex; align-items: center; gap: 8px;
+      color: var(--text-secondary); font-size: 13px; padding: 20px;
+    }
+    .spinner {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid var(--border-light);
+      border-top-color: var(--teal-400);
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 14px; }
+    .error-msg { color: var(--red-600); font-size: 13px; padding: 12px 20px; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ═══ SIDEBAR ═══ -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+            <path d="M9 2H15M12 2V8M4 12H20M4 12V20A2 2 0 0 0 6 22H18A2 2 0 0 0 20 20V12M4 12L6 8H18L20 12"/>
+            <path d="M9 16H15"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-text">RxSmart</div>
+          <div class="logo-sub">Pharmacy System</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <div class="nav-item active" onclick="showPage('dashboard', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Dashboard
+      </div>
+
+      <div class="nav-section">Manage</div>
+      <div class="nav-item" onclick="showPage('medicines', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 2H15M12 2V8M4 12H20M4 12V20A2 2 0 0 0 6 22H18A2 2 0 0 0 20 20V12M4 12L6 8H18L20 12"/>
+        </svg>
+        Medicines
+      </div>
+      <div class="nav-item" onclick="showPage('orders', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 2L3 6V20A2 2 0 0 0 5 22H19A2 2 0 0 0 21 20V6L18 2H6Z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10A4 4 0 0 1 8 10"/>
+        </svg>
+        Orders
+      </div>
+      <div class="nav-item" onclick="showPage('new-order', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39A2 2 0 0 0 9.66 16h8.68a2 2 0 0 0 1.98-1.61L23 6H6"/>
+        </svg>
+        New Order
+      </div>
+
+      <div class="nav-section">People</div>
+      <div class="nav-item" onclick="showPage('users', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Users
+      </div>
+
+      <div class="nav-section">Inventory</div>
+      <div class="nav-item" onclick="showPage('add-medicine', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+        Add Medicine
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar">AD</div>
+        <div>
+          <div class="user-name">Admin</div>
+          <div class="user-role">Pharmacist</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          Search medicines…
+        </div>
+        <button class="btn primary" onclick="showPage('new-order', document.querySelectorAll('.nav-item')[3])">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          New Order
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ══ DASHBOARD ══ -->
+      <div class="page active" id="page-dashboard">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-icon" style="background:var(--teal-50)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-600)" stroke-width="1.5">
+                <path d="M9 2H15M12 2V8M4 12H20M4 12V20A2 2 0 0 0 6 22H18A2 2 0 0 0 20 20V12M4 12L6 8H18L20 12"/>
+              </svg>
+            </div>
+            <div class="metric-label">Total Medicines</div>
+            <div class="metric-value" id="dash-total-meds">—</div>
+            <div class="metric-change up" id="dash-med-sub">loading…</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background:var(--blue-50)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="1.5">
+                <path d="M6 2L3 6V20A2 2 0 0 0 5 22H19A2 2 0 0 0 21 20V6L18 2H6Z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+              </svg>
+            </div>
+            <div class="metric-label">Total Orders</div>
+            <div class="metric-value" id="dash-total-orders">—</div>
+            <div class="metric-change up" id="dash-ord-sub">loading…</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background:var(--amber-50)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber-600)" stroke-width="1.5">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+            <div class="metric-label">Total Users</div>
+            <div class="metric-value" id="dash-total-users">—</div>
+            <div class="metric-change up" id="dash-user-sub">loading…</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background:var(--coral-50)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--coral-600)" stroke-width="1.5">
+                <path d="M10.29 3.86L1.82 18A2 2 0 0 0 3.54 21H20.46A2 2 0 0 0 22.18 18L13.71 3.86A2 2 0 0 0 10.29 3.86Z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div class="metric-label">Low Stock Items</div>
+            <div class="metric-value" id="dash-low-stock">—</div>
+            <div class="metric-change down">needs reorder</div>
+          </div>
+        </div>
+
+        <div class="grid-main">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Recent orders</span>
+              <span style="font-size:12px;color:var(--text-secondary)">Latest 5</span>
+            </div>
+            <div id="dash-orders-body">
+              <div class="loading"><div class="spinner"></div>Loading orders…</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Activity</span></div>
+            <div>
+              <div class="activity-item">
+                <div class="activity-dot" style="background:var(--teal-400)"></div>
+                <div>
+                  <div class="activity-text">API connected to Flask backend</div>
+                  <div class="activity-time">Just now</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-dot" style="background:var(--amber-400)"></div>
+                <div>
+                  <div class="activity-text">Checking low-stock medicines</div>
+                  <div class="activity-time">On load</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-dot" style="background:var(--blue-400)"></div>
+                <div>
+                  <div class="activity-text">User data fetched from /users</div>
+                  <div class="activity-time">On load</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:0">
+          <div class="card-header">
+            <span class="card-title">Low stock alert</span>
+            <span class="pill pill-red" id="low-stock-count">—</span>
+          </div>
+          <div id="low-stock-table">
+            <div class="loading"><div class="spinner"></div>Loading…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ MEDICINES ══ -->
+      <div class="page" id="page-medicines">
+        <div class="page-header">
+          <div>
+            <div class="page-heading">Medicines</div>
+            <div class="page-sub" id="med-count-sub">Loading inventory…</div>
+          </div>
+          <button class="btn primary" onclick="showPage('add-medicine', document.querySelectorAll('.nav-item')[5])">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add medicine
+          </button>
+        </div>
+        <input class="search-input-full" id="med-search" placeholder="Search by name, category, manufacturer…" oninput="filterMeds(this.value)" />
+        <div class="filter-row" id="cat-filters"></div>
+        <div id="med-grid" class="med-card-grid">
+          <div class="loading"><div class="spinner"></div>Loading medicines…</div>
+        </div>
+      </div>
+
+      <!-- ══ ORDERS ══ -->
+      <div class="page" id="page-orders">
+        <div class="page-header">
+          <div>
+            <div class="page-heading">Orders</div>
+            <div class="page-sub">All customer orders</div>
+          </div>
+        </div>
+        <div class="tab-row">
+          <div class="tab active" onclick="filterOrders('all', this)">All</div>
+          <div class="tab" onclick="filterOrders('pending', this)">Pending</div>
+          <div class="tab" onclick="filterOrders('completed', this)">Completed</div>
+          <div class="tab" onclick="filterOrders('cancelled', this)">Cancelled</div>
+        </div>
+        <div class="card">
+          <div id="orders-table-wrap">
+            <div class="loading"><div class="spinner"></div>Loading orders…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ NEW ORDER ══ -->
+      <div class="page" id="page-new-order">
+        <div class="page-header">
+          <div>
+            <div class="page-heading">New order</div>
+            <div class="page-sub">Search medicines, add to cart, and place order</div>
+          </div>
+        </div>
+        <div class="order-cart">
+          <div>
+            <input class="search-input-full" id="order-search" placeholder="Search medicine to add to cart…" oninput="renderOrderSearch(this.value)" />
+            <div id="order-search-results" style="margin-bottom:12px"></div>
+            <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">Cart</div>
+            <div class="cart-list" id="cart-items">
+              <div style="font-size:13px;color:var(--text-secondary);padding:8px 0">Cart is empty. Search and add medicines above.</div>
+            </div>
+          </div>
+
+          <div class="order-summary">
+            <div class="summary-title">Order summary</div>
+            <div class="field" style="margin-bottom:10px">
+              <label>Customer name</label>
+              <input type="text" id="order-customer-name" placeholder="e.g. Rahul Verma" />
+            </div>
+            <div class="field" style="margin-bottom:16px">
+              <label>Customer phone</label>
+              <input type="text" id="order-customer-phone" placeholder="+91 9XXXXXXXXX" />
+            </div>
+            <div id="cart-summary-lines"></div>
+            <div class="summary-row total">
+              <span class="summary-label">Total</span>
+              <span id="cart-total">₹0.00</span>
+            </div>
+            <button class="btn primary" style="width:100%;justify-content:center;margin-top:16px" onclick="placeOrder()">
+              Place order
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ USERS ══ -->
+      <div class="page" id="page-users">
+        <div class="page-header">
+          <div>
+            <div class="page-heading">Users</div>
+            <div class="page-sub">Registered customers and staff</div>
+          </div>
+          <button class="btn primary" onclick="showPage('add-user', null)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add user
+          </button>
+        </div>
+        <div class="card">
+          <div id="users-table-wrap">
+            <div class="loading"><div class="spinner"></div>Loading users…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ADD MEDICINE ══ -->
+      <div class="page" id="page-add-medicine">
+        <div class="page-header">
+          <div>
+            <div class="page-heading">Add medicine</div>
+            <div class="page-sub">Add a new medicine to inventory</div>
+          </div>
+        </div>
+        <div class="card" style="max-width:680px">
+          <div class="card-header"><span class="card-title">Medicine details</span></div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Medicine name *</label>
+              <input type="text" id="new-name" placeholder="e.g. Paracetamol 500mg" />
+            </div>
+            <div class="field">
+              <label>Category</label>
+              <select id="new-cat">
+                <option>Analgesic</option><option>Antibiotic</option>
+                <option>Antidiabetic</option><option>Antihistamine</option>
+                <option>Antihypertensive</option><option>Statin</option>
+                <option>Antacid</option><option>Vitamin</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Manufacturer</label>
+              <input type="text" id="new-mfr" placeholder="e.g. Sun Pharma" />
+            </div>
+            <div class="field">
+              <label>Price (₹) *</label>
+              <input type="number" id="new-price" placeholder="0.00" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label>Stock quantity</label>
+              <input type="number" id="new-stock" placeholder="0" min="0" />
+            </div>
+            <div class="field">
+              <label>Expiry date</label>
+              <input type="date" id="new-expiry" />
+            </div>
+            <div class="field field-full">
+              <label>Description / Notes</label>
+              <textarea id="new-desc" rows="2" placeholder="Usage, dosage, warnings…" style="resize:vertical"></textarea>
+            </div>
+          </div>
+          <div class="form-footer">
+            <button class="btn" onclick="showPage('medicines', document.querySelectorAll('.nav-item')[1])">Cancel</button>
+            <button class="btn primary" onclick="saveMedicine()">Save medicine</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+     API_BASE points to your Flask backend.
+     Change it if your Flask runs on a different port.
+════════════════════════════════════════════════ -->
+<script>
+  // ──────────────────────────────────────────────
+  // CONFIG — change this to match your Flask server
+  // ──────────────────────────────────────────────
+  const API_BASE = 'http://localhost:5000';
+
+  // ──────────────────────────────────────────────
+  // NAVIGATION
+  // ──────────────────────────────────────────────
+  const pageNames = {
+    dashboard: 'Dashboard', medicines: 'Medicines', orders: 'Orders',
+    'new-order': 'New Order', users: 'Users', 'add-medicine': 'Add Medicine'
+  };
+
+  function showPage(id, navEl) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    if (navEl) navEl.classList.add('active');
+    document.getElementById('topbar-title').textContent = pageNames[id] || id;
+
+    // Lazy-load data when page opens
+    if (id === 'medicines') loadMedicines();
+    if (id === 'orders')    loadOrders();
+    if (id === 'users')     loadUsers();
+    if (id === 'new-order') loadMedicinesForOrder();
+  }
+
+  // ──────────────────────────────────────────────
+  // API HELPERS
+  // ──────────────────────────────────────────────
+  async function apiFetch(path, options = {}) {
+    const res = await fetch(API_BASE + path, {
+      headers: { 'Content-Type': 'application/json' },
+      ...options
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
+  // ──────────────────────────────────────────────
+  // TOAST
+  // ──────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ──────────────────────────────────────────────
+  // DASHBOARD
+  // ──────────────────────────────────────────────
+  async function loadDashboard() {
+    try {
+      const [medsRes, orders, users] = await Promise.all([
+        apiFetch('/medicines/?limit=100'),
+        apiFetch('/orders'),
+        apiFetch('/users')
+      ]);
+      const meds = medsRes.data;
+
+      document.getElementById('dash-total-meds').textContent   = meds.length;
+      document.getElementById('dash-med-sub').textContent      = `${meds.length} medicines in stock`;
+      document.getElementById('dash-total-orders').textContent = orders.length;
+      document.getElementById('dash-ord-sub').textContent      = `${orders.length} total orders`;
+      document.getElementById('dash-total-users').textContent  = users.length;
+      document.getElementById('dash-user-sub').textContent     = `${users.length} registered users`;
+
+      // Low stock (stock < 30)
+      const low = meds.filter(m => (m.stock || m.quantity || 0) < 30);
+      document.getElementById('dash-low-stock').textContent = low.length;
+      document.getElementById('low-stock-count').textContent = low.length + ' items';
+      renderLowStockTable(low);
+
+      // Recent orders
+      const recent = orders.slice(-5).reverse();
+      renderDashOrders(recent);
+
+    } catch (e) {
+      document.getElementById('dash-total-meds').textContent = 'Error';
+      console.error('Dashboard load error:', e);
+    }
+  }
+
+  function renderDashOrders(orders) {
+    const el = document.getElementById('dash-orders-body');
+    if (!orders.length) { el.innerHTML = '<div class="empty-state">No orders found</div>'; return; }
+    el.innerHTML = `
+      <table>
+        <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
+        <tbody>
+          ${orders.map(o => `
+            <tr>
+              <td style="font-weight:600;color:var(--teal-600)">#${o.id}</td>
+              <td>${o.user_id || o.customer_name || '—'}</td>
+              <td>₹${o.total_price || o.total || 0}</td>
+              <td>${statusPill(o.status)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function renderLowStockTable(meds) {
+    const el = document.getElementById('low-stock-table');
+    if (!meds.length) { el.innerHTML = '<div class="empty-state">All medicines are well stocked!</div>'; return; }
+    el.innerHTML = `
+      <table>
+        <thead><tr><th>Medicine</th><th>Category</th><th>Stock</th><th>Status</th></tr></thead>
+        <tbody>
+          ${meds.map(m => {
+            const qty = m.stock || m.quantity || 0;
+            const pct = Math.min(100, Math.round(qty / 100 * 100));
+            const color = qty < 10 ? 'var(--red-400)' : 'var(--amber-400)';
+            return `<tr>
+              <td style="font-weight:600">${m.name}</td>
+              <td>${m.category || '—'}</td>
+              <td>
+                <div class="stock-bar-wrap">
+                  <div class="stock-bar-bg"><div class="stock-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+                  <span style="font-size:12px;color:${color}">${qty}</span>
+                </div>
+              </td>
+              <td>${qty < 10 ? '<span class="pill pill-red">Critical</span>' : '<span class="pill pill-amber">Low</span>'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // ──────────────────────────────────────────────
+  // MEDICINES
+  // ──────────────────────────────────────────────
+  let allMeds = [];
+  let activeCat = 'All';
+
+  async function loadMedicines() {
+    document.getElementById('med-grid').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
+    try {
+      const res = await apiFetch('/medicines/?limit=100');
+      allMeds = res.data;
+      document.getElementById('med-count-sub').textContent = `${allMeds.length} medicines in inventory`;
+      buildCatFilters();
+      filterMeds('');
+    } catch (e) {
+      document.getElementById('med-grid').innerHTML = '<div class="error-msg">Failed to load medicines. Is Flask running?</div>';
+    }
+  }
+
+  function buildCatFilters() {
+    const cats = ['All', ...new Set(allMeds.map(m => m.category).filter(Boolean))];
+    document.getElementById('cat-filters').innerHTML = cats.map(cat =>
+      `<div class="filter-pill${cat === activeCat ? ' active' : ''}" onclick="setCat('${cat}',this)">${cat}</div>`
+    ).join('');
+  }
+
+  function setCat(cat, el) {
+    activeCat = cat;
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    filterMeds(document.getElementById('med-search').value);
+  }
+
+  function filterMeds(q) {
+    q = q.toLowerCase();
+    const filtered = allMeds.filter(m => {
+      const matchQ = !q || (m.name||'').toLowerCase().includes(q)
+                         || (m.category||'').toLowerCase().includes(q)
+                         || (m.manufacturer||'').toLowerCase().includes(q);
+      const matchCat = activeCat === 'All' || m.category === activeCat;
+      return matchQ && matchCat;
+    });
+    renderMedGrid(filtered);
+  }
+
+  function renderMedGrid(list) {
+    const g = document.getElementById('med-grid');
+    if (!list.length) { g.innerHTML = '<div class="empty-state">No medicines found.</div>'; return; }
+    g.innerHTML = list.map(m => {
+      const qty = m.stock || m.quantity || 0;
+      const stockLabel = qty > 50 ? 'In stock' : qty > 0 ? `Low — ${qty} left` : 'Out of stock';
+      return `
+        <div class="med-card" onclick="addToCart(${JSON.stringify(m).replace(/"/g,'&quot;')})">
+          <div class="med-card-name">${m.name}</div>
+          <div class="med-card-cat">${m.category || '—'} · ${m.manufacturer || '—'}</div>
+          <div class="med-card-footer">
+            <div>
+              <div class="med-card-price">₹${m.price || 0}</div>
+              <div class="med-card-stock">${stockLabel}</div>
+            </div>
+            <button class="add-btn" onclick="event.stopPropagation();addToCart(${JSON.stringify(m).replace(/"/g,'&quot;')})">+</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ──────────────────────────────────────────────
+  // ORDERS
+  // ──────────────────────────────────────────────
+  let allOrders = [];
+
+  async function loadOrders() {
+    document.getElementById('orders-table-wrap').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
+    try {
+      allOrders = await apiFetch('/orders');
+      renderOrdersTable(allOrders);
+    } catch (e) {
+      document.getElementById('orders-table-wrap').innerHTML = '<div class="error-msg">Failed to load orders.</div>';
+    }
+  }
+
+  function filterOrders(status, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const filtered = status === 'all' ? allOrders : allOrders.filter(o => o.status === status);
+    renderOrdersTable(filtered);
+  }
+
+  function renderOrdersTable(orders) {
+    const wrap = document.getElementById('orders-table-wrap');
+    if (!orders.length) { wrap.innerHTML = '<div class="empty-state">No orders found.</div>'; return; }
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total (₹)</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>
+          ${orders.map(o => `
+            <tr>
+              <td style="font-weight:600;color:var(--teal-600)">#${o.id}</td>
+              <td>${o.user_id || o.customer_name || '—'}</td>
+              <td>${o.items ? o.items.length : (o.item_count || '—')}</td>
+              <td style="font-weight:600">₹${o.total_price || o.total || 0}</td>
+              <td style="color:var(--text-secondary)">${o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN') : '—'}</td>
+              <td>${statusPill(o.status)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function statusPill(s) {
+    const map = { completed:'pill-teal', pending:'pill-amber', cancelled:'pill-red' };
+    const cls = map[s] || 'pill-blue';
+    const label = s ? s.charAt(0).toUpperCase() + s.slice(1) : '—';
+    return `<span class="pill ${cls}">${label}</span>`;
+  }
+
+  // ──────────────────────────────────────────────
+  // USERS
+  // ──────────────────────────────────────────────
+  async function loadUsers() {
+    document.getElementById('users-table-wrap').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
+    try {
+      const users = await apiFetch('/users');
+      if (!users.length) { document.getElementById('users-table-wrap').innerHTML = '<div class="empty-state">No users found.</div>'; return; }
+      const colors = ['var(--teal-400)','var(--coral-400)','var(--amber-400)','var(--blue-400)','#888780'];
+      document.getElementById('users-table-wrap').innerHTML = `
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th></tr></thead>
+          <tbody>
+            ${users.map((u, i) => {
+              const initials = (u.name || u.username || 'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+              return `
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <div class="avatar" style="width:28px;height:28px;font-size:11px;background:${colors[i%colors.length]}">${initials}</div>
+                      ${u.name || u.username || '—'}
+                    </div>
+                  </td>
+                  <td>${u.email || '—'}</td>
+                  <td>${u.phone || u.phone_number || '—'}</td>
+                  <td>${rolePill(u.role)}</td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+    } catch (e) {
+      document.getElementById('users-table-wrap').innerHTML = '<div class="error-msg">Failed to load users.</div>';
+    }
+  }
+
+  function rolePill(role) {
+    const map = { admin:'pill-green', pharmacist:'pill-teal', customer:'pill-blue' };
+    const cls = map[(role||'').toLowerCase()] || 'pill-blue';
+    return `<span class="pill ${cls}">${role || 'Customer'}</span>`;
+  }
+
+  // ──────────────────────────────────────────────
+  // NEW ORDER — CART
+  // ──────────────────────────────────────────────
+  let orderMeds = [];
+  let cart = {};
+
+  async function loadMedicinesForOrder() {
+    if (orderMeds.length) return;
+    try {
+      const res = await apiFetch('/medicines/?limit=100');
+      orderMeds = res.data;
+    } catch (e) {
+      showToast('Could not load medicines for order');
+    }
+  }
+
+  function renderOrderSearch(q) {
+    const el = document.getElementById('order-search-results');
+    if (!q) { el.innerHTML = ''; return; }
+    const matches = orderMeds.filter(m => (m.name||'').toLowerCase().includes(q.toLowerCase())).slice(0, 6);
+    if (!matches.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text-secondary)">No results</div>'; return; }
+    el.innerHTML = matches.map(m => `
+      <div onclick="addToCart(${JSON.stringify(m).replace(/"/g,'&quot;')})" style="
+        display:flex;justify-content:space-between;align-items:center;
+        padding:9px 14px;cursor:pointer;font-size:13px;
+        border:0.5px solid var(--border-light);border-radius:8px;
+        background:var(--bg-primary);margin-bottom:6px;">
+        <div>
+          <span style="font-weight:600">${m.name}</span>
+          <span style="color:var(--text-secondary);margin-left:8px">${m.category||''}</span>
+        </div>
+        <span style="font-weight:600;color:var(--teal-600)">₹${m.price||0}</span>
+      </div>`).join('');
+  }
+
+  function addToCart(m) {
+    const key = m.id || m.name;
+    if (!cart[key]) cart[key] = { med: m, qty: 1 };
+    else cart[key].qty++;
+    renderCart();
+    document.getElementById('order-search').value = '';
+    document.getElementById('order-search-results').innerHTML = '';
+    showToast(m.name + ' added to cart');
+  }
+
+  function changeQty(key, delta) {
+    if (!cart[key]) return;
+    cart[key].qty += delta;
+    if (cart[key].qty <= 0) delete cart[key];
+    renderCart();
+  }
+
+  function renderCart() {
+    const keys = Object.keys(cart);
+    const el = document.getElementById('cart-items');
+    if (!keys.length) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);padding:8px 0">Cart is empty.</div>';
+      document.getElementById('cart-summary-lines').innerHTML = '';
+      document.getElementById('cart-total').textContent = '₹0.00';
+      return;
+    }
+    el.innerHTML = keys.map(k => {
+      const item = cart[k];
+      const lineTotal = (item.med.price || 0) * item.qty;
+      return `
+        <div class="cart-item">
+          <div>
+            <div class="cart-item-name">${item.med.name}</div>
+            <div class="cart-item-meta">₹${item.med.price || 0} each</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="qty-ctrl">
+              <div class="qty-btn" onclick="changeQty('${k}', -1)">−</div>
+              <div class="qty-num">${item.qty}</div>
+              <div class="qty-btn" onclick="changeQty('${k}', 1)">+</div>
+            </div>
+            <div style="font-weight:600;font-size:13px;min-width:60px;text-align:right">₹${lineTotal.toFixed(2)}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    const subtotal = keys.reduce((s, k) => s + (cart[k].med.price || 0) * cart[k].qty, 0);
+    const tax = subtotal * 0.18;
+    document.getElementById('cart-summary-lines').innerHTML = `
+      <div class="summary-row"><span class="summary-label">Subtotal</span><span>₹${subtotal.toFixed(2)}</span></div>
+      <div class="summary-row"><span class="summary-label">GST (18%)</span><span>₹${tax.toFixed(2)}</span></div>`;
+    document.getElementById('cart-total').textContent = '₹' + (subtotal + tax).toFixed(2);
+  }
+
+  async function placeOrder() {
+    const keys = Object.keys(cart);
+    if (!keys.length) { showToast('Cart is empty!'); return; }
+
+    const customerName  = document.getElementById('order-customer-name').value.trim();
+    const customerPhone = document.getElementById('order-customer-phone').value.trim();
+
+    // Build payload matching your Flask /orders POST schema
+    const payload = {
+      customer_name:  customerName  || 'Walk-in Customer',
+      customer_phone: customerPhone || '',
+      items: keys.map(k => ({
+        medicine_id: cart[k].med.id,
+        name:        cart[k].med.name,
+        quantity:    cart[k].qty,
+        price:       cart[k].med.price
+      })),
+      total_price: keys.reduce((s, k) => s + (cart[k].med.price || 0) * cart[k].qty, 0) * 1.18
+    };
+
+    try {
+      await apiFetch('/orders/place', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      cart = {};
+      renderCart();
+      showToast('Order placed successfully!');
+      setTimeout(() => {
+        allOrders = [];
+        showPage('orders', document.querySelectorAll('.nav-item')[2]);
+      }, 1000);
+    } catch (e) {
+      showToast('Failed to place order. Check backend.');
+      console.error(e);
+    }
+  }
+
+  // ──────────────────────────────────────────────
+  // ADD MEDICINE
+  // ──────────────────────────────────────────────
+  async function saveMedicine() {
+    const name = document.getElementById('new-name').value.trim();
+    const price = parseFloat(document.getElementById('new-price').value);
+    if (!name) { showToast('Please enter a medicine name'); return; }
+    if (isNaN(price)) { showToast('Please enter a valid price'); return; }
+
+    const payload = {
+      name,
+      category:     document.getElementById('new-cat').value,
+      manufacturer: document.getElementById('new-mfr').value.trim(),
+      price,
+      stock:        parseInt(document.getElementById('new-stock').value) || 0,
+      expiry_date:  document.getElementById('new-expiry').value,
+      description:  document.getElementById('new-desc').value.trim()
+    };
+
+    try {
+      await apiFetch('/medicines', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      showToast(name + ' added to inventory!');
+      allMeds = [];
+      orderMeds = [];
+      setTimeout(() => showPage('medicines', document.querySelectorAll('.nav-item')[1]), 800);
+    } catch (e) {
+      showToast('Failed to save medicine. Check backend.');
+      console.error(e);
+    }
+  }
+
+  // ──────────────────────────────────────────────
+  // BOOT
+  // ──────────────────────────────────────────────
+  loadDashboard();
+</script>
+</body>
+</html>
