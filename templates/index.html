@@ -809,8 +809,8 @@
     try {
       const [medsRes, orders, users] = await Promise.all([
         apiFetch('/medicines/?limit=100'),
-        apiFetch('/orders'),
-        apiFetch('/users')
+        apiFetch('/orders/'),
+        apiFetch('/users/')
       ]);
       const meds = medsRes.data;
 
@@ -893,6 +893,10 @@
     try {
       const res = await apiFetch('/medicines/?limit=100');
       allMeds = res.data;
+      allMeds = Object.values(allMeds.reduce((acc, m) => {
+        if (!acc[m.name] || m.price < acc[m.name].price) acc[m.name] = m;
+        return acc;
+      }, {}));
       document.getElementById('med-count-sub').textContent = `${allMeds.length} medicines in inventory`;
       buildCatFilters();
       filterMeds('');
@@ -956,7 +960,7 @@
   async function loadOrders() {
     document.getElementById('orders-table-wrap').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
     try {
-      allOrders = await apiFetch('/orders');
+      allOrders = await apiFetch('/orders/');
       renderOrdersTable(allOrders);
     } catch (e) {
       document.getElementById('orders-table-wrap').innerHTML = '<div class="error-msg">Failed to load orders.</div>';
@@ -1175,7 +1179,7 @@ async function placeOrder() {
     };
 
     try {
-      await apiFetch('/medicines', {
+      await apiFetch('/medicines/add', {
         method: 'POST',
         body: JSON.stringify(payload)
       });
