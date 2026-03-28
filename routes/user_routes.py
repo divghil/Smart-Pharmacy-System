@@ -9,6 +9,7 @@ def get_users():
     return jsonify([{
         "id": u.id,
         "name": u.name,
+        "phone": u.phone,
         "email": u.email,
         "role": u.role
     } for u in users])
@@ -21,6 +22,7 @@ def register():
         name=data['name'],
         email=data['email'],
         password=data['password'],
+        phone=data.get('phone', ''),
         role="customer"
     )
 

@@ -692,6 +692,7 @@
     <div class="form-grid">
       <div class="field"><label>Name</label><input type="text" id="u-name" placeholder="Full name"/></div>
       <div class="field"><label>Email</label><input type="email" id="u-email" placeholder="email@example.com"/></div>
+      <div class="field"><label>Phone</label><input type="text" id="u-phone" placeholder="10-digit number" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/></div>
       <div class="field"><label>Password</label><input type="password" id="u-pass" placeholder="Password"/></div>
       <div class="field"><label>Role</label>
         <select id="u-role"><option value="customer">Customer</option><option value="admin">Admin</option></select>
@@ -795,7 +796,7 @@
     try {
       await apiFetch('/users/register', {
         method: 'POST',
-        body: JSON.stringify({ name, email, password: pass, role })
+        body: JSON.stringify({ name, email, password: pass, phone: document.getElementById('u-phone').value.trim(), role })
     });
     showToast('User added!');
     document.getElementById('add-user-modal').style.display = 'none';
@@ -848,7 +849,7 @@
   async function loadDashboard() {
     try {
       const [medsRes, orders, users] = await Promise.all([
-        apiFetch('/medicines/?limit=9999'),
+        apiFetch('/medicines/?limit=15000'),
         apiFetch('/orders/'),
         apiFetch('/users/')
       ]);
@@ -931,7 +932,7 @@
   async function loadMedicines() {
     document.getElementById('med-grid').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
     try {
-      const res = await apiFetch('/medicines/?limit=9999');
+      const res = await apiFetch('/medicines/?limit=15000');
       allMeds = res.data;
       const seen = {};
       allMeds = allMeds.filter(m => {
@@ -1094,7 +1095,7 @@
   async function loadMedicinesForOrder() {
     if (orderMeds.length) return;
     try {
-      const res = await apiFetch('/medicines/?limit=9999');
+      const res = await apiFetch('/medicines/?limit=15000');
       orderMeds = res.data;
     } catch (e) {
       showToast('Could not load medicines for order');
