@@ -10,11 +10,14 @@ def get_orders():
     from models.order import Order
     orders = Order.query.all()
     return jsonify([{
-        "id": o.id,
-        "user_id": o.user_id,
-        "total_price": o.total_amount,
-        "status": getattr(o, 'status', 'completed')
-    } for o in orders])
+    "id": o.id,
+    "user_id": o.user_id,
+    "customer_name": o.customer_name or 'Walk-in Customer',
+    "total_price": o.total_amount,
+    "status": o.status or 'completed',
+    "customer_phone": o.customer_phone or '—',
+    "created_at": o.created_at.isoformat() if o.created_at else None
+} for o in orders])
 
 @order_bp.route('/place', methods=['POST'])
 def place_order():
@@ -32,6 +35,8 @@ def place_order():
 
     order = Order(
         user_id=data['user_id'],
+        customer_name=data.get('customer_name', 'Walk-in Customer'),
+        customer_phone=data.get('customer_phone', ''),
         total_amount=total
     )
 

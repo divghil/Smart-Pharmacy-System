@@ -653,7 +653,7 @@
             </div>
             <div class="field" style="margin-bottom:16px">
               <label>Customer phone</label>
-              <input type="text" id="order-customer-phone" placeholder="+91 9XXXXXXXXX" />
+              <input type="text" id="order-customer-phone" placeholder="10-digit mobile number" maxlength="10" pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
             </div>
             <div id="cart-summary-lines"></div>
             <div class="summary-row total">
@@ -674,12 +674,10 @@
             <div class="page-heading">Users</div>
             <div class="page-sub">Registered customers and staff</div>
           </div>
-          <button class="btn primary" onclick="showPage('add-user', null)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Add user
+          <button class="btn primary" onclick="showAddUserForm()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add user
           </button>
         </div>
         <div class="card">
@@ -688,6 +686,23 @@
           </div>
         </div>
       </div>
+      <div id="add-user-modal" style="display:none;margin-top:16px;max-width:480px">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Add new user</span></div>
+    <div class="form-grid">
+      <div class="field"><label>Name</label><input type="text" id="u-name" placeholder="Full name"/></div>
+      <div class="field"><label>Email</label><input type="email" id="u-email" placeholder="email@example.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="u-pass" placeholder="Password"/></div>
+      <div class="field"><label>Role</label>
+        <select id="u-role"><option value="customer">Customer</option><option value="admin">Admin</option></select>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn" onclick="document.getElementById('add-user-modal').style.display='none'">Cancel</button>
+      <button class="btn primary" onclick="addUser()">Save user</button>
+    </div>
+  </div>
+</div>
 
       <!-- ══ ADD MEDICINE ══ -->
       <div class="page" id="page-add-medicine">
@@ -765,7 +780,32 @@
     dashboard: 'Dashboard', medicines: 'Medicines', orders: 'Orders',
     'new-order': 'New Order', users: 'Users', 'add-medicine': 'Add Medicine'
   };
+//FOR USER BUTTON
+  function showAddUserForm() {
+    const m = document.getElementById('add-user-modal');
+    m.style.display = m.style.display === 'none' ? 'block' : 'none';
+  }
 
+  async function addUser() {
+    const name  = document.getElementById('u-name').value.trim();
+    const email = document.getElementById('u-email').value.trim();
+    const pass  = document.getElementById('u-pass').value.trim();
+    const role  = document.getElementById('u-role').value;
+    if (!name || !email || !pass) { showToast('Please fill all fields'); return; }
+    try {
+      await apiFetch('/users/register', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, password: pass, role })
+    });
+    showToast('User added!');
+    document.getElementById('add-user-modal').style.display = 'none';
+    loadUsers();
+    } catch(e) {
+    showToast('Failed to add user.');
+    }
+  }
+
+//______________________
   function showPage(id, navEl) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -808,7 +848,7 @@
   async function loadDashboard() {
     try {
       const [medsRes, orders, users] = await Promise.all([
-        apiFetch('/medicines/?limit=100'),
+        apiFetch('/medicines/?limit=9999'),
         apiFetch('/orders/'),
         apiFetch('/users/')
       ]);
@@ -822,10 +862,10 @@
       document.getElementById('dash-user-sub').textContent     = `${users.length} registered users`;
 
       // Low stock (stock < 30)
-      const low = meds.filter(m => (m.stock || m.quantity || 0) < 30);
-      document.getElementById('dash-low-stock').textContent = low.length;
-      document.getElementById('low-stock-count').textContent = low.length + ' items';
-      renderLowStockTable(low);
+      const lowRes = await apiFetch('/medicines/low-stock?threshold=50');
+      document.getElementById('dash-low-stock').textContent = lowRes.length;
+      document.getElementById('low-stock-count').textContent = lowRes.length + ' items';
+      renderLowStockTable(lowRes.slice(0,5));
 
       // Recent orders
       const recent = orders.slice(-5).reverse();
@@ -847,7 +887,7 @@
           ${orders.map(o => `
             <tr>
               <td style="font-weight:600;color:var(--teal-600)">#${o.id}</td>
-              <td>${o.user_id || o.customer_name || '—'}</td>
+              <td>${o.customer_name || o.user_id || '—'}</td>
               <td>₹${o.total_price || o.total || 0}</td>
               <td>${statusPill(o.status)}</td>
             </tr>`).join('')}
@@ -891,12 +931,15 @@
   async function loadMedicines() {
     document.getElementById('med-grid').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
     try {
-      const res = await apiFetch('/medicines/?limit=100');
+      const res = await apiFetch('/medicines/?limit=9999');
       allMeds = res.data;
-      allMeds = Object.values(allMeds.reduce((acc, m) => {
-        if (!acc[m.name] || m.price < acc[m.name].price) acc[m.name] = m;
-        return acc;
-      }, {}));
+      const seen = {};
+      allMeds = allMeds.filter(m => {
+        const key = m.name + '|' + m.age_group;
+        seen[key] = (seen[key] || 0) + 1;
+        return seen[key] <= 1;
+      });
+    
       document.getElementById('med-count-sub').textContent = `${allMeds.length} medicines in inventory`;
       buildCatFilters();
       filterMeds('');
@@ -940,7 +983,7 @@
       return `
         <div class="med-card" onclick="addToCart(${JSON.stringify(m).replace(/"/g,'&quot;')})">
           <div class="med-card-name">${m.name}</div>
-          <div class="med-card-cat">${m.category || '—'} · ${m.manufacturer || '—'}</div>
+          <div class="med-card-cat">${m.category || '—'} · ${m.age_group || '—'}</div>
           <div class="med-card-footer">
             <div>
               <div class="med-card-price">₹${m.price || 0}</div>
@@ -979,13 +1022,13 @@
     if (!orders.length) { wrap.innerHTML = '<div class="empty-state">No orders found.</div>'; return; }
     wrap.innerHTML = `
       <table>
-        <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total (₹)</th><th>Date</th><th>Status</th></tr></thead>
+        <thead><tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Total (₹)</th><th>Date</th><th>Status</th></tr></thead>
         <tbody>
           ${orders.map(o => `
             <tr>
               <td style="font-weight:600;color:var(--teal-600)">#${o.id}</td>
-              <td>${o.user_id || o.customer_name || '—'}</td>
-              <td>${o.items ? o.items.length : (o.item_count || '—')}</td>
+              <td>${o.customer_name || o.user_id || '—'}</td>
+              <td>${o.customer_phone || '—'}</td>
               <td style="font-weight:600">₹${o.total_price || o.total || 0}</td>
               <td style="color:var(--text-secondary)">${o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN') : '—'}</td>
               <td>${statusPill(o.status)}</td>
@@ -1007,7 +1050,7 @@
   async function loadUsers() {
     document.getElementById('users-table-wrap').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
     try {
-      const users = await apiFetch('/users');
+      const users = await apiFetch('/users/');
       if (!users.length) { document.getElementById('users-table-wrap').innerHTML = '<div class="empty-state">No users found.</div>'; return; }
       const colors = ['var(--teal-400)','var(--coral-400)','var(--amber-400)','var(--blue-400)','#888780'];
       document.getElementById('users-table-wrap').innerHTML = `
@@ -1051,7 +1094,7 @@
   async function loadMedicinesForOrder() {
     if (orderMeds.length) return;
     try {
-      const res = await apiFetch('/medicines/?limit=100');
+      const res = await apiFetch('/medicines/?limit=9999');
       orderMeds = res.data;
     } catch (e) {
       showToast('Could not load medicines for order');
@@ -1139,6 +1182,8 @@ async function placeOrder() {
       const payload = {
         medicine_id: cart[k].med.id,
         user_id: 1,
+        customer_phone: document.getElementById('order-customer-phone').value.trim(),
+        customer_name: document.getElementById('order-customer-name').value.trim() || 'Walk-in Customer',
         quantity: cart[k].qty
       };
       await apiFetch('/orders/place', {
@@ -1169,14 +1214,13 @@ async function placeOrder() {
     if (isNaN(price)) { showToast('Please enter a valid price'); return; }
 
     const payload = {
-      name,
-      category:     document.getElementById('new-cat').value,
-      manufacturer: document.getElementById('new-mfr').value.trim(),
-      price,
-      stock:        parseInt(document.getElementById('new-stock').value) || 0,
-      expiry_date:  document.getElementById('new-expiry').value,
-      description:  document.getElementById('new-desc').value.trim()
-    };
+  name:        document.getElementById('new-name').value.trim(),
+  category:    document.getElementById('new-cat').value,
+  price:       parseFloat(document.getElementById('new-price').value) || 0,
+  stock:       parseInt(document.getElementById('new-stock').value) || 0,
+  expiry_days: parseInt(document.getElementById('new-expiry').value) || 365,
+  age_group:   'General'
+};
 
     try {
       await apiFetch('/medicines/add', {
