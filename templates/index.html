@@ -1126,44 +1126,34 @@
       <div class="summary-row"><span class="summary-label">GST (18%)</span><span>₹${tax.toFixed(2)}</span></div>`;
     document.getElementById('cart-total').textContent = '₹' + (subtotal + tax).toFixed(2);
   }
+async function placeOrder() {
+  const keys = Object.keys(cart);
+  if (!keys.length) { showToast('Cart is empty!'); return; }
 
-  async function placeOrder() {
-    const keys = Object.keys(cart);
-    if (!keys.length) { showToast('Cart is empty!'); return; }
-
-    const customerName  = document.getElementById('order-customer-name').value.trim();
-    const customerPhone = document.getElementById('order-customer-phone').value.trim();
-
-    // Build payload matching your Flask /orders POST schema
-    const payload = {
-      customer_name:  customerName  || 'Walk-in Customer',
-      customer_phone: customerPhone || '',
-      items: keys.map(k => ({
+  try {
+    for (const k of keys) {
+      const payload = {
         medicine_id: cart[k].med.id,
-        name:        cart[k].med.name,
-        quantity:    cart[k].qty,
-        price:       cart[k].med.price
-      })),
-      total_price: keys.reduce((s, k) => s + (cart[k].med.price || 0) * cart[k].qty, 0) * 1.18
-    };
-
-    try {
+        user_id: 1,
+        quantity: cart[k].qty
+      };
       await apiFetch('/orders/place', {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      cart = {};
-      renderCart();
-      showToast('Order placed successfully!');
-      setTimeout(() => {
-        allOrders = [];
-        showPage('orders', document.querySelectorAll('.nav-item')[2]);
-      }, 1000);
-    } catch (e) {
-      showToast('Failed to place order. Check backend.');
-      console.error(e);
     }
+    cart = {};
+    renderCart();
+    showToast('Order placed successfully!');
+    setTimeout(() => {
+      allOrders = [];
+      showPage('orders', document.querySelectorAll('.nav-item')[2]);
+    }, 1000);
+  } catch (e) {
+    showToast('Failed to place order. Check backend.');
+    console.error(e);
   }
+}
 
   // ──────────────────────────────────────────────
   // ADD MEDICINE
