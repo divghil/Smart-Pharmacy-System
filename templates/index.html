@@ -459,11 +459,17 @@
     <div class="topbar">
       <div class="page-title" id="topbar-title">Dashboard</div>
       <div class="topbar-right">
-        <div class="search-bar">
+        <div class="search-bar" onclick="focusTopSearch()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
-          Search medicines…
+          <input
+            type="text"
+            id="top-search"
+            placeholder="Search medicines…"
+            style="border:none;outline:none;background:transparent;font-size:13px;color:var(--text-primary);width:100%;font-family:var(--font)"
+            oninput="handleTopSearch(this.value)"
+          />
         </div>
         <button class="btn primary" onclick="showPage('new-order',document.querySelectorAll('.nav-item')[3])">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -720,8 +726,8 @@
           </div>
           <!-- Risk distribution -->
           <div class="card" style="margin-bottom:16px">
-            <div class="card-header"><span class="card-title">Stock risk distribution</span></div>
-            <div class="chart-wrap"><canvas id="chart-risk" style="max-height:160px"></canvas></div>
+            <div class="card-header"><span class="card-title">Avg stock level by category</span></div>
+            <div class="chart-wrap"><canvas id="chart-risk" style="max-height:220px"></canvas></div>
           </div>
         </div>
       </div>
@@ -1460,37 +1466,62 @@
       }
     });
 
-    // ── 5. Risk distribution horizontal bar ───────────
+    // ── 5. Avg stock level by category ───────────────
     destroyChart('risk');
-    const riskCounts = {out_of_stock:0, critical:0, high:0, medium:0, low:0};
-    // Use smart-alerts cached data or derive from fast-slow
+    const catStock = {}, catCount = {};
     meds.forEach(m => {
-      const ratio = m.predicted_demand_30d / Math.max(m.current_stock, 1);
-      if (m.current_stock===0)   riskCounts.out_of_stock++;
-      else if (ratio>=1)         riskCounts.critical++;
-      else if (ratio>=0.75)      riskCounts.high++;
-      else if (ratio>=0.50)      riskCounts.medium++;
-      else                       riskCounts.low++;
+      catStock[m.category] = (catStock[m.category] || 0) + m.current_stock;
+      catCount[m.category] = (catCount[m.category] || 0) + 1;
     });
+    const stockLabels = Object.keys(catStock).sort((a,b) =>
+      (catStock[b]/catCount[b]) - (catStock[a]/catCount[a])
+    );
+    const stockAvgs = stockLabels.map(c => Math.round(catStock[c] / catCount[c]));
+    const stockColors = [TEAL,BLUE,AMBER,CORAL,PURPLE,GREEN,TEAL_L,AMBER_L];
     charts['risk'] = new Chart(document.getElementById('chart-risk'), {
       type: 'bar',
       data: {
-        labels: ['Out of stock','Critical','High','Medium','Low'],
+        labels: stockLabels,
         datasets:[{
-          data: [riskCounts.out_of_stock, riskCounts.critical, riskCounts.high, riskCounts.medium, riskCounts.low],
-          backgroundColor: ['#A32D2D','#E24B4A','#D85A30','#BA7517','#1D9E75'],
+          label: 'Avg stock (units)',
+          data: stockAvgs,
+          backgroundColor: stockLabels.map((_,i) => stockColors[i % stockColors.length]),
           borderRadius: 4, borderSkipped: false,
         }]
       },
       options: {
         indexAxis: 'y', responsive:true, maintainAspectRatio:true,
-        plugins:{ legend:{display:false} },
+        plugins:{
+          legend:{display:false},
+          tooltip:{ callbacks:{ label: ctx => ` ${ctx.raw} units avg stock` }}
+        },
         scales:{
           x:{ grid:{color:gridColor}, ticks:{color:tickColor}, beginAtZero:true },
           y:{ grid:{display:false}, ticks:{color:tickColor} }
         }
       }
     });
+  }
+
+  // ── Topbar search ─────────────────────────────────
+  function focusTopSearch() {
+    document.getElementById('top-search').focus();
+  }
+
+  function handleTopSearch(q) {
+    // Navigate to Medicines page and filter
+    const medsNavItem = document.querySelectorAll('.nav-item')[1];
+    showPage('medicines', medsNavItem);
+    // Wait for medicines to load then apply filter
+    const apply = () => {
+      const input = document.getElementById('med-search');
+      if (input) {
+        input.value = q;
+        filterMeds(q);
+      }
+    };
+    // If already loaded, apply immediately, else wait briefly
+    allMeds.length ? apply() : setTimeout(apply, 600);
   }
 
   // ── Boot ─────────────────────────────────────────────
