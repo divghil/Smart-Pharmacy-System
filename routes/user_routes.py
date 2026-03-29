@@ -23,7 +23,7 @@ def register():
         email=data['email'],
         password=data['password'],
         phone=data.get('phone', ''),
-        role="customer"
+        role=data.get('role', 'customer')
     )
 
     db.session.add(user)

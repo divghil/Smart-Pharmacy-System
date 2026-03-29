@@ -44,7 +44,7 @@ def place_order():
             db.session.rollback()
             return jsonify({"error": f"{medicine.name if medicine else 'Medicine'} out of stock"}), 400
         medicine.stock -= item['quantity']
-        line_total = medicine.price * item['quantity']
+        line_total = round(medicine.price * item['quantity'] * 1.18, 2)
         total += line_total
         db.session.add(OrderItem(
             order_id=order.id,
@@ -54,6 +54,6 @@ def place_order():
             price=medicine.price
         ))
 
-    order.total_amount = total
+    order.total_amount = round(total, 2)
     db.session.commit()
     return jsonify({"message": "Order placed", "total": total})
