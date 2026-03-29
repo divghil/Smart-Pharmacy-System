@@ -1,0 +1,18 @@
+# Large Data Files (The 116MB file)
+sales_history.csv
+
+# Python Virtual Environments
+venv/
+.venv/
+env/
+
+# Python Cache (Temporary files)
+__pycache__/
+*.py[cod]
+
+# Machine Learning Model (If you decide not to use LFS)
+# ml/rf_model.pkl
+
+# IDE specific files
+.vscode/
+.idea/

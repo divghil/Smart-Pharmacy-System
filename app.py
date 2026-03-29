@@ -7,7 +7,6 @@ from routes.order_routes import order_bp
 from flask_cors import CORS
 from routes.ml_routes import ml_bp
 
-
 app = Flask(__name__)
 app.config.from_object(Config)
 
