@@ -14,7 +14,6 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 db.init_app(app)
 
 
-
 # Register Blueprints
 app.register_blueprint(user_bp, url_prefix='/users')
 app.register_blueprint(medicine_bp, url_prefix='/medicines')
